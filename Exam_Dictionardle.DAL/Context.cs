@@ -1,4 +1,5 @@
-﻿using Exam_Dictionardle.Modules;
+﻿using Exam_Dictionardle.DAL.Modules;
+using Exam_Dictionardle.Modules;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.Numerics;
@@ -9,6 +10,7 @@ namespace Exam_Dictionardle.DAL
     {
         public DbSet<Game> Games { get; set; }
         public DbSet<WordInfo> WordsInfo { get; set; }
+        public DbSet<Player> Players { get; set; }
 
         public Context() { }
 

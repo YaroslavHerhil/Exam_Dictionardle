@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using System.Formats.Tar;
+using Exam_Dictionardle.DAL.Modules;
 
 namespace Exam_Dictionardle.DAL
 {
@@ -17,6 +18,7 @@ namespace Exam_Dictionardle.DAL
 
         public void AddGame(Game game)
         {
+            _context.Players.Attach(game.Player);
             _context.Games.Add(game);
             _context.SaveChanges();
         }
@@ -25,10 +27,19 @@ namespace Exam_Dictionardle.DAL
             _context.WordsInfo.Add(word);
             _context.SaveChanges();
         }
+        public void AddPlayer(Player player)
+        {
+            _context.Players.Add(player);
+            _context.SaveChanges();
+        }
 
         public DbSet<WordInfo> GetWords()
         {
             return _context.WordsInfo;
+        }
+        public DbSet<Player> GetPlayers()
+        {
+            return _context.Players;
         }
         public DbSet<Game> GetGame()
         {

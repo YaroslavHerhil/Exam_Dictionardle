@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Exam_Dictionardle.DAL.Modules;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,7 +16,7 @@ namespace Exam_Dictionardle.Modules
         public int Miliseconds { get; set; }
         public WordInfo Word { get; set; }
 
-        public string PlayerName { get; set; }
+        public Player Player { get; set; }
 
     }
 }

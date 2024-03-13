@@ -4,8 +4,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Exam_Dictionardle"
+        xmlns:other="assembly=Exam_Dictionardle.DAL.Modules"
         mc:Ignorable="d"
-        Title="MainWindow" Height="600" Width="900">
+        Title="MainWindow" Height="700" Width="1200"
+        Background="Black">
     <Window.Resources>
         <Style x:Key="suggestStyle" TargetType="{x:Type Button}">
             <Setter Property="FontSize" Value="18"/>
@@ -20,15 +22,49 @@
             <EventSetter Event="Click" Handler="suggestion_Click"/>
         </Style>
     </Window.Resources>
-    <Grid Background="DimGray">
+    <Grid x:Name="mainGrid">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition></ColumnDefinition>
-            <ColumnDefinition Width="3*"></ColumnDefinition>
-            <ColumnDefinition></ColumnDefinition>
+            <ColumnDefinition Width="2*"></ColumnDefinition>
+            <ColumnDefinition Width="5*"></ColumnDefinition>
+            <ColumnDefinition Width="2*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition></RowDefinition>
         </Grid.RowDefinitions>
+
+        <StackPanel x:Name="loggedOutPanel">
+            <Button x:Name="regDialogBtn" Margin="20 10" Click="regDialogBtn_Click">Register</Button>
+
+            <StackPanel  x:Name="registerPanel" Background="#909090">
+                <TextBlock Margin="10 0">User name:</TextBlock>
+                <TextBox x:Name="regUserNameBox" Margin="10">Mrs121212</TextBox>
+                <TextBlock Margin="10 0">Login:</TextBlock>
+                <TextBox  x:Name="regLoginBox" Margin="10"></TextBox>
+                <TextBlock Margin="10 0">Password:</TextBlock>
+                <TextBox x:Name="regPasswordBox" Margin="10"></TextBox>
+
+
+                <Button x:Name="registerBtn" Margin="10" Click="registerBtn_Click">Submit</Button>
+            </StackPanel>
+            
+                <Button x:Name="logDialogBtn" Margin="20 10" Click="logDialogBtn_Click">Login</Button>
+
+                <StackPanel x:Name="loginPanel" Background="#909090">
+                    <TextBlock Margin="10 0">User name:</TextBlock>
+                    <TextBox  x:Name="logLoginBox" Margin="10"></TextBox>
+                    <TextBlock Margin="10 0">Password:</TextBlock>
+                    <TextBox x:Name="logPasswordBox" Margin="10"></TextBox>
+
+
+                    <Button x:Name="loginBtn" Margin="10" Click="loginBtn_Click">Submit</Button>
+                </StackPanel>
+
+        </StackPanel>
+        
+        <StackPanel x:Name="loggedOnPanel" Visibility="Collapsed">
+            <Button x:Name="signOutBtn" Margin="20 10" Click="signOutBtn_Click" >SignOut</Button>
+            <TextBlock x:Name="userNameHud"></TextBlock>
+        </StackPanel>
 
         <Grid Grid.Column="1" Background="#202020">
             <Grid.ColumnDefinitions>
@@ -47,35 +83,52 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBox x:Name="wordBox" Background="LightGray" Margin="20 30 5 30" FontSize="16" Padding="10" VerticalAlignment="Center"></TextBox>
-                <Button x:Name="submitButton" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center"  Padding="20 10" FontSize="24" Click="submitButton_Click">Submit</Button>
+                <Button x:Name="submitButton" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center"  Width="100" Height="50" FontSize="24" Click="submitButton_Click">Submit</Button>
             </Grid>
 
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition></RowDefinition>
                     <RowDefinition Height="2*"></RowDefinition>
+                    <RowDefinition Height="3*"></RowDefinition>
                 </Grid.RowDefinitions>
-                <TextBlock x:Name="toolTipBlock" Foreground="LightGray" VerticalAlignment="Center" FontSize="20" Padding="10">
-                    Did you mean...
-                </TextBlock>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="15*"></ColumnDefinition>
+                        <ColumnDefinition Width="2*"></ColumnDefinition>
+                        <ColumnDefinition Width="3*"></ColumnDefinition>
+                        <ColumnDefinition Width="4*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="toolTipBlock" Foreground="LightGray" VerticalAlignment="Center" FontSize="16" Padding="10" TextWrapping="Wrap">
+                        Welcome! Your Goal is to guess a word from the dictionary. Good luck!
+                    </TextBlock>
+
+                    <TextBlock Grid.Column="1" x:Name="triesHud" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="LightGray" FontWeight="Bold" FontSize="16">9/9</TextBlock>
+                    <TextBlock Grid.Column="2" x:Name="scoreHud" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="LightGray" FontWeight="Bold" FontSize="16">10000</TextBlock>
+                    <TextBlock Grid.Column="3" x:Name="timeHud" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="LightGray" FontWeight="Bold" FontSize="16">2:04</TextBlock>
+                </Grid>
+
+
                 <WrapPanel Grid.Row="1" x:Name="suggestContainer" >
                     <WrapPanel.Resources>
                         <Style BasedOn="{StaticResource suggestStyle}" TargetType="{x:Type Button}" />
                     </WrapPanel.Resources>
-                    <Button>
-                        <TextBlock>hewwo</TextBlock>
-                    </Button>
-                    
-                    
                 </WrapPanel>
             </Grid>
-                
+
             <ScrollViewer Grid.Row="2">
                 <StackPanel x:Name="guessContainer">
-                    
+
                 </StackPanel>
             </ScrollViewer>
-            
+
         </Grid>
+
+        <DataGrid Grid.Column="2" x:Name="gameGrid" AutoGenerateColumns="True" ColumnWidth="*" Background="Transparent">
+            
+        </DataGrid>
+        
+        
+
+
     </Grid>
 </Window>

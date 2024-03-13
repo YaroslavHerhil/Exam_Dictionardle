@@ -1,5 +1,6 @@
 ﻿using Exam_Dictionardle.DAL;
 using Exam_Dictionardle.Modules;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,6 +13,8 @@ namespace Exam_Dictionardle
 {
     public class GameController
     {
+        public PlayerController PlayerController;
+
         public int Score { get; set; }
         public int Tries { get; set; }
         public Stopwatch Stopwatch { get; set; }
@@ -24,6 +27,7 @@ namespace Exam_Dictionardle
 
         public GameController()
         {
+            PlayerController = new PlayerController();
             _repository = new Repository();
             GameStart();
         }
@@ -77,12 +81,17 @@ namespace Exam_Dictionardle
             JsonDocument suggestionsJson = JsonDocument.Parse(json);
             List<string> suggestions = new List<string>();
 
-            if (suggestionsJson.RootElement[0].ValueKind == JsonValueKind.String) 
+            if (suggestionsJson.RootElement.GetArrayLength() > 0 && suggestionsJson.RootElement[0].ValueKind == JsonValueKind.String) 
             {
                 suggestions = JsonSerializer.Deserialize<List<string>>(json);
             }
 
             return suggestions;
+        }
+
+        public string GetTimeString()
+        {
+            return Stopwatch.Elapsed.ToString(@"mm\:ss");
         }
 
         public WordInfo GetWordInfo(string word)
@@ -92,30 +101,47 @@ namespace Exam_Dictionardle
 
             WordInfo wordInfo = new WordInfo();
 
-            if (wordInfoJson.RootElement[0].ValueKind == JsonValueKind.Object)
+            if (wordInfoJson.RootElement.GetArrayLength() > 0 && wordInfoJson.RootElement[0].ValueKind == JsonValueKind.Object)
             {
                 wordInfo.Word = wordInfoJson.RootElement[0].GetProperty("meta").GetProperty("stems")[0].GetString();
-                wordInfo.Pronunciation = wordInfoJson.RootElement[0].GetProperty("hwi").GetProperty("prs")[0].GetProperty("ipa").GetString();
-                wordInfo.Type = wordInfoJson.RootElement[0].GetProperty("fl").GetString();
-                if (wordInfoJson.RootElement[0].GetProperty("hwi").GetProperty("prs")[0].GetProperty("sound").TryGetProperty("audio", out JsonElement audio))
+                if (wordInfoJson.RootElement[0].GetProperty("hwi").TryGetProperty("prs", out JsonElement pronc))
                 {
-                    string audioStr = audio.GetString();
-                    string subDirStr = audioStr[0].ToString();
-                    if (!char.IsLetter(audioStr[0]))
+                    wordInfo.Pronunciation = pronc[0].GetProperty("ipa").GetString();
+
+
+
+                    if (pronc[0].TryGetProperty("sound", out JsonElement audio))
                     {
-                        subDirStr = "number";
+                        string audioStr = audio.GetProperty("audio").GetString();
+                        string subDirStr = audioStr[0].ToString();
+                        if (!char.IsLetter(audioStr[0]))
+                        {
+                            subDirStr = "number";
+                        }
+                        else if (audioStr.Substring(0, 3) == "bix")
+                        {
+                            subDirStr = "bix";
+                        }
+                        else if (audioStr.Substring(0, 2) == "gg")
+                        {
+                            subDirStr = "gg";
+                        }
+                        wordInfo.AudioUrl = $@"https://media.merriam-webster.com/audio/prons/en/us/wav/{subDirStr}/{audioStr}.wav";
+
                     }
-                    else if (audioStr.Substring(0, 3) == "bix")
+                    else
                     {
-                        subDirStr = "bix";
-                    }
-                    else if (audioStr.Substring(0, 2) == "gg")
-                    {
-                        subDirStr = "gg";
+                        wordInfo.AudioUrl = "-";
                     }
 
-                    wordInfo.AudioUrl = $@"https://media.merriam-webster.com/audio/prons/en/us/wav/{subDirStr}/{audioStr}.wav";
                 }
+                else
+                {
+                    wordInfo.AudioUrl = "-";
+                    wordInfo.Pronunciation = "-";
+                }
+                wordInfo.Type = wordInfoJson.RootElement[0].GetProperty("fl").GetString();
+                
                 wordInfo.Description = wordInfoJson.RootElement[0].GetProperty("shortdef").EnumerateArray().First().GetString();
 
                 if (!_repository.GetWords().ToList().Contains(wordInfo))
@@ -133,19 +159,24 @@ namespace Exam_Dictionardle
         public void GameEnd()
         {
             Stopwatch.Stop();
-            Game game = new Game() 
+            Game game = new Game()
             {
                 Tries = Tries,
                 Score = Score,
                 Miliseconds = (int)Stopwatch.ElapsedMilliseconds,
                 Word = TheWord,
-                PlayerName = "Placeholder"
+                Player = PlayerController.CurrentPlayer
             };
 
             IsPlaying = false;
             _repository.AddGame(game);
         }
 
+
+        public List<Game> GetAllGames()
+        {
+            return _repository.GetGame().Include(g => g.Player).Include(g => g.Word).ToList();
+        }
         
         
 
