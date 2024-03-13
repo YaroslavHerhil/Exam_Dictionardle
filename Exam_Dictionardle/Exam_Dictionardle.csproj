@@ -12,4 +12,8 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Exam_Dictionardle.DAL\Exam_Dictionardle.DAL.csproj" />
+  </ItemGroup>
+
 </Project>

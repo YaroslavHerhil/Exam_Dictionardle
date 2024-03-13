@@ -1,8 +1,8 @@
-﻿using Exam_Dictionardle.Modules;
-using System.IO;
+﻿using Exam_Dictionardle.DAL;
+using Exam_Dictionardle.Modules;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace Exam_Dictionardle
 {
@@ -11,23 +11,60 @@ namespace Exam_Dictionardle
     /// </summary>
     public partial class MainWindow : Window
     {
+        private GameController _gameController;
+
         public MainWindow()
         {
+            _gameController = new GameController();
             InitializeComponent();
-            string json = ApiController.GetWord("tower").Result;
-            JsonDocument wordInfoJson = JsonDocument.Parse(json);
-            WordInfo theWord = new WordInfo(wordInfoJson.RootElement);
-
-
-
         }
 
         private void submitButton_Click(object sender, RoutedEventArgs e)
         {
-            string json = ApiController.GetWord(wordBox.Text.ToLower()).Result;
-            JsonDocument wordInfoJson = JsonDocument.Parse(json);
-            WordInfo wordInfo = new WordInfo(wordInfoJson.RootElement);
-            MessageBox.Show($"{wordInfo.Word}\n{wordInfo.Pronunciation}\n{wordInfo.AudioUrl}\n{wordInfo.Description}");
+            WordInfo guessWord = _gameController.CheckWord(wordBox.Text);
+
+            if(guessWord.Word == null) 
+            {
+                toolTipBlock.Text = "Did you mean...";
+
+                List<string> suggestions = _gameController.GetSuggestions(wordBox.Text);
+                suggestContainer.Children.Clear();
+                foreach(string suggestion in suggestions) 
+                { 
+                    Button newSuggestion = new Button();
+                    newSuggestion.Content = suggestion;
+                    suggestContainer.Children.Add(newSuggestion);
+                }
+            }
+            else
+            {
+                guessContainer.Children.Insert(0, new WordInfoBox(_gameController.TheWord, guessWord));
+
+                if (!_gameController.IsPlaying)
+                {
+                    if (_gameController.Tries == 0)
+                    {
+                        MessageBox.Show("You lost. Sad!");
+                    }
+                    if (_gameController.Tries > 0)
+                    {
+                        MessageBox.Show("You Won. Nice.");
+                    }
+                    guessContainer.Children.Clear();
+                }
+            }
         }
+        private void suggestion_Click(object sender, RoutedEventArgs e)
+        {
+            Button thisButton = sender as Button;
+            wordBox.Text = thisButton.Content.ToString();
+
+            toolTipBlock.Text = "Here you go!";
+            suggestContainer.Children.Clear();
+
+        }
+
+
+
     }
 }
