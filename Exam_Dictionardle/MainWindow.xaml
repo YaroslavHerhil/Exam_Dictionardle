@@ -32,16 +32,25 @@
             <RowDefinition></RowDefinition>
         </Grid.RowDefinitions>
 
+        <Border Grid.ColumnSpan="3">
+            <Border.Background>
+                <LinearGradientBrush EndPoint="0.504,1.5" StartPoint="0.504,0.03">
+                    <GradientStop Color="#00000050" Offset="0"/>
+                    <GradientStop Color="#40B040" Offset="0.95"/>
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+
         <StackPanel x:Name="loggedOutPanel">
             <Button x:Name="regDialogBtn" Margin="20 10" Click="regDialogBtn_Click">Register</Button>
 
-            <StackPanel  x:Name="registerPanel" Background="#909090">
+            <StackPanel Visibility="Collapsed" x:Name="registerPanel" Background="#909090">
                 <TextBlock Margin="10 0">User name:</TextBlock>
-                <TextBox x:Name="regUserNameBox" Margin="10">Mrs121212</TextBox>
+                <TextBox x:Name="regUserNameBox" Margin="10"></TextBox>
                 <TextBlock Margin="10 0">Login:</TextBlock>
                 <TextBox  x:Name="regLoginBox" Margin="10"></TextBox>
                 <TextBlock Margin="10 0">Password:</TextBlock>
-                <TextBox x:Name="regPasswordBox" Margin="10"></TextBox>
+                <PasswordBox x:Name="regPasswordBox" Margin="10"></PasswordBox>
 
 
                 <Button x:Name="registerBtn" Margin="10" Click="registerBtn_Click">Submit</Button>
@@ -49,11 +58,11 @@
             
                 <Button x:Name="logDialogBtn" Margin="20 10" Click="logDialogBtn_Click">Login</Button>
 
-                <StackPanel x:Name="loginPanel" Background="#909090">
+            <StackPanel Visibility="Collapsed"  x:Name="loginPanel" Background="#909090">
                     <TextBlock Margin="10 0">User name:</TextBlock>
                     <TextBox  x:Name="logLoginBox" Margin="10"></TextBox>
                     <TextBlock Margin="10 0">Password:</TextBlock>
-                    <TextBox x:Name="logPasswordBox" Margin="10"></TextBox>
+                    <PasswordBox x:Name="logPasswordBox" Margin="10"></PasswordBox>
 
 
                     <Button x:Name="loginBtn" Margin="10" Click="loginBtn_Click">Submit</Button>
@@ -98,10 +107,17 @@
                         <ColumnDefinition Width="3*"></ColumnDefinition>
                         <ColumnDefinition Width="4*"></ColumnDefinition>
                     </Grid.ColumnDefinitions>
-                    <TextBlock x:Name="toolTipBlock" Foreground="LightGray" VerticalAlignment="Center" FontSize="16" Padding="10" TextWrapping="Wrap">
-                        Welcome! Your Goal is to guess a word from the dictionary. Good luck!
-                    </TextBlock>
-
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="6*"></ColumnDefinition>
+                            <ColumnDefinition></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="toolTipBlock" Foreground="LightGray" VerticalAlignment="Center" FontSize="16" Padding="10" TextWrapping="Wrap">
+                            Welcome! Your Goal is to guess a word from the dictionary. Good luck!
+                        </TextBlock>
+                        <Button Grid.Column="1" Margin="2 20" Click="Button_Click_2" Visibility="Collapsed" Name="hintBtn">Hint</Button>
+                    </Grid>
+                    
                     <TextBlock Grid.Column="1" x:Name="triesHud" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="LightGray" FontWeight="Bold" FontSize="16">9/9</TextBlock>
                     <TextBlock Grid.Column="2" x:Name="scoreHud" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="LightGray" FontWeight="Bold" FontSize="16">10000</TextBlock>
                     <TextBlock Grid.Column="3" x:Name="timeHud" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="LightGray" FontWeight="Bold" FontSize="16">2:04</TextBlock>
@@ -123,12 +139,19 @@
 
         </Grid>
 
-        <DataGrid Grid.Column="2" x:Name="gameGrid" AutoGenerateColumns="True" ColumnWidth="*" Background="Transparent">
-            
-        </DataGrid>
-        
-        
-
-
+        <Grid Grid.Column="2" >
+            <Grid.RowDefinitions>
+                <RowDefinition></RowDefinition>
+                <RowDefinition Height="8*"></RowDefinition>
+            </Grid.RowDefinitions>
+            <StackPanel VerticalAlignment="Center">
+                <Button Margin="5" Click="Button_Click">Highscores</Button>
+                <Button Margin="5" Click="Button_Click_1">My games</Button>
+            </StackPanel>
+            <DataGrid Grid.Row="1" x:Name="gameGrid" AutoGenerateColumns="False" ColumnWidth="*" Background="Transparent" Tag="Highscores">
+                <DataGrid.Columns>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
     </Grid>
 </Window>

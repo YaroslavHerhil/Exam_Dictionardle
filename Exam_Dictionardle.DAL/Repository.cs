@@ -18,7 +18,7 @@ namespace Exam_Dictionardle.DAL
 
         public void AddGame(Game game)
         {
-            _context.Players.Attach(game.Player);
+            
             _context.Games.Add(game);
             _context.SaveChanges();
         }
@@ -41,7 +41,7 @@ namespace Exam_Dictionardle.DAL
         {
             return _context.Players;
         }
-        public DbSet<Game> GetGame()
+        public DbSet<Game> GetGames()
         {
             return _context.Games;
         }

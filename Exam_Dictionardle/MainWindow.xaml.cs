@@ -7,6 +7,10 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 using System.Drawing.Drawing2D;
 using System.Drawing;
+using Microsoft.VisualBasic.ApplicationServices;
+using System.Collections.ObjectModel;
+using Exam_Dictionardle.DAL.Modules;
+using System.Windows.Data;
 
 namespace Exam_Dictionardle
 {
@@ -15,6 +19,7 @@ namespace Exam_Dictionardle
     /// </summary>
     public partial class MainWindow : Window
     {
+
         private GameController _gameController;
         private System.Timers.Timer _timer;
         public MainWindow()
@@ -22,16 +27,21 @@ namespace Exam_Dictionardle
             
             InitializeComponent();
             _gameController = new GameController();
-            CreateGrid();
             _timer = new System.Timers.Timer(1000);
             _timer.Elapsed += UpdateUi;
             _timer.Start();
+            SetupGrid();
+
         }
 
         private void submitButton_Click(object sender, RoutedEventArgs e)
         {
+            if(wordBox.Text.Length == 0) 
+            {
+                toolTipBlock.Text = "Write something!";
+                return;
+            }
             WordInfo guessWord = _gameController.CheckWord(wordBox.Text);
-
             if(guessWord.Word == null) 
             {
                 toolTipBlock.Text = "Did you mean...";
@@ -48,23 +58,50 @@ namespace Exam_Dictionardle
             else
             {
                 guessContainer.Children.Insert(0, new WordInfoBox(_gameController.TheWord, guessWord));
-
-                if (!_gameController.IsPlaying)
+            }
+            if (!_gameController.IsPlaying)
+            {
+                hintBtn.Visibility = Visibility.Collapsed;
+                if (_gameController.Tries == 0)
                 {
-                    if (_gameController.Tries == 0)
-                    {
-                        MessageBox.Show("You lost. Sad!");
-                    }
-                    if (_gameController.Tries > 0)
-                    {
-                        MessageBox.Show("You Won. Nice.");
-                    }
-                    guessContainer.Children.Clear();
+                    toolTipBlock.Text = $"You lost. The correct word was {_gameController.TheWord.Word}. Better luck next time!";
                 }
+                if (_gameController.Tries > 0)
+                {
+                    toolTipBlock.Text = "You won. Horray!";
+                }
+                guessContainer.Children.Clear();
+            }
+            if (_gameController.Tries == 5)
+            {
+                HintOption();
             }
 
 
+            wordBox.Text = "";
+            UpdateGrid();
         }
+
+
+        private void HintOption()
+        {
+            toolTipBlock.Text = "You lost half of your lives so you get a hint! It does cost a life and 1800 points..";
+            hintBtn.Visibility = Visibility.Visible; 
+
+        }
+
+        private void UpdateGrid()
+        {
+            if(gameGrid.Tag == "Highscores")
+            {
+                gameGrid.ItemsSource = _gameController.GetHighscores();
+            }
+            else if(gameGrid.Tag == "My games")
+            {
+                gameGrid.ItemsSource = _gameController.GetGamesByThisPlayer();
+            }
+        }
+
         private void suggestion_Click(object sender, RoutedEventArgs e)
         {
             Button thisButton = sender as Button;
@@ -75,9 +112,9 @@ namespace Exam_Dictionardle
 
         }
 
-        void CreateGrid()
+        void SetupGrid()
         {
-            List<Game> games = _gameController.GetAllGames();
+            List<Game> games = _gameController.GetHighscores();
 
 
 
@@ -87,33 +124,35 @@ namespace Exam_Dictionardle
             DataGridTextColumn playerColumn = new DataGridTextColumn
             {
                 Header = "Player",
-                Binding = new System.Windows.Data.Binding("Player.UserName")
+                Binding = new Binding("Player.UserName")
             };
             gameGrid.Columns.Add(playerColumn);
 
             DataGridTextColumn wordColumn = new DataGridTextColumn
             {
                 Header = "Word",
-                Binding = new System.Windows.Data.Binding("Word.Word")
+                Binding = new Binding("Word.Word")
             };
             gameGrid.Columns.Add(wordColumn);
 
             DataGridTextColumn scoreColumn = new DataGridTextColumn
             {
                 Header = "Score",
-                Binding = new System.Windows.Data.Binding("Score")
+                Binding = new Binding("Score")
             };
             gameGrid.Columns.Add(scoreColumn);
             DataGridTextColumn triesColumn = new DataGridTextColumn
             {
-                Header = "Tries",
-                Binding = new System.Windows.Data.Binding("Tries")
+                Header = "Lives",
+                Binding = new Binding("Tries")
             };
             gameGrid.Columns.Add(triesColumn);
+            Binding binding = new Binding("Miliseconds");
+            binding.Converter = new MilisecondsConverter();
             DataGridTextColumn timeColumn = new DataGridTextColumn
             {
                 Header = "Time",
-                Binding = new System.Windows.Data.Binding("Miliseconds")
+                Binding = binding,
             };
             gameGrid.Columns.Add(timeColumn);
         }
@@ -131,7 +170,7 @@ namespace Exam_Dictionardle
 
         private void registerBtn_Click(object sender, RoutedEventArgs e)
         {
-            if(_gameController.PlayerController.Register(regUserNameBox.Text, regLoginBox.Text, regPasswordBox.Text))
+            if(_gameController.PlayerController.Register(regUserNameBox.Text, regLoginBox.Text, regPasswordBox.Password))
             {
                 toolTipBlock.Text = $"Greetings, {_gameController.PlayerController.CurrentPlayer.UserName}! Welcome to Dictionardle.";
                 loggedOnPanel.Visibility = Visibility.Visible;
@@ -157,7 +196,7 @@ namespace Exam_Dictionardle
 
         private void loginBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (_gameController.PlayerController.Login(regLoginBox.Text, regPasswordBox.Text))
+            if (_gameController.PlayerController.Login(regLoginBox.Text, regPasswordBox.Password))
             {
                 toolTipBlock.Text = $"Hi there, {_gameController.PlayerController.CurrentPlayer.UserName}. Welcome back!";
                 loggedOnPanel.Visibility = Visibility.Visible;
@@ -175,6 +214,33 @@ namespace Exam_Dictionardle
             toolTipBlock.Text = "GoodBye!";
             loggedOnPanel.Visibility = Visibility.Collapsed;
             loggedOutPanel.Visibility = Visibility.Visible;
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            gameGrid.Tag = "Highscores";
+            UpdateGrid();
+        }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            if(_gameController.PlayerController.CurrentPlayer.UserName == "Anonymous")
+            {
+                toolTipBlock.Text = "You need to login first!";
+            }
+            else
+            {
+                gameGrid.Tag = "My games";
+                UpdateGrid();
+            }
+        }
+
+        private void Button_Click_2(object sender, RoutedEventArgs e)
+        {
+            hintBtn.Visibility = Visibility.Collapsed;
+            toolTipBlock.Text = _gameController.TheWord.Description;
+            _gameController.Tries--;
+            _gameController.Score -= 1800;
         }
     }
 }

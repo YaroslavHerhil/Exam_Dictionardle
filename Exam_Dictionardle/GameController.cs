@@ -29,13 +29,23 @@ namespace Exam_Dictionardle
         {
             PlayerController = new PlayerController();
             _repository = new Repository();
+            if (!_repository.GetWords().Any())
+            {
+                loadWords();
+            }
+
+
+
             GameStart();
         }
+
+
+
 
         public void GameStart()
         {
             TheWord = getRandomWord();
-            Score = 10000;
+            Score = 9000;
             Tries = 9;
 
             Stopwatch = new Stopwatch();
@@ -50,7 +60,31 @@ namespace Exam_Dictionardle
         }
 
 
+        private void loadWords()
+        {
+            List<string> randomWords = new List<string>
+            {
+                "Dog", "Cat", "Book", "Tree", "House", "Car", "Sun", "Moon", "Rain", "Snow",
+                "Chair", "Table", "Pen", "Phone", "Computer", "Door", "Window", "Flower", "Bird",
+                "Fish", "Rabbit", "Horse", "Bike", "Ocean", "River", "Mountain", "Desert", "Forest",
+                "Turtle", "Elephant", "Giraffe", "Lion", "Tiger", "Leopard", "Zebra", "Kangaroo",
+                "Octopus", "Dolphin", "Penguin", "Eagle", "Butterfly", "Dragonfly", "Bee", "Ant",
+                "Spider", "Snake", "Lizard", "Squirrel", "Beaver", "Koala", "Ostrich", "Raccoon",
+                "Otter", "Seal", "Polar bear", "Grizzly bear", "Panda", "Chimpanzee", "Gorilla",
+                "Wolverine", "Jackal", "Coyote", "Lynx", "Cougar", "Cheetah", "Hyena", "Bison",
+                "Elk", "Moose", "Manatee", "Beluga", "Orca", "Whale", "Shark", "Octopus",
+                "Squid", "Starfish", "Crab", "Lobster", "Shrimp", "Oyster", "Clam", "Snail",
+                "Butterfly", "Dragonfly", "Ladybug", "Beetle", "Caterpillar", "Mosquito",
+                "Frog", "Toad", "Salamander", "Newt", "Turtle", "Tortoise", "Crocodile",
+                "Alligator", "Iguana", "Gecko", "Chameleon", "Komodo dragon"
+            };
 
+            foreach(string word in randomWords)
+            {
+                WordInfo newWord = getWordInfo(word);
+                _repository.AddWordInfo(newWord);
+            }
+        }
 
         public WordInfo CheckWord(string word)
         {
@@ -58,7 +92,7 @@ namespace Exam_Dictionardle
 
             Tries--;
 
-            WordInfo guessWord = GetWordInfo(word);
+            WordInfo guessWord = getWordInfo(word);
 
             if (TheWord.Word == guessWord.Word) 
             {
@@ -66,10 +100,10 @@ namespace Exam_Dictionardle
             }
             else
             {
-                Score -= 750;
+                Score -= 900;
             }
 
-            if(Tries == 0) { GameEnd(); }
+            if(Tries <= 0) { GameEnd(); }
 
             return guessWord;
         }
@@ -77,16 +111,24 @@ namespace Exam_Dictionardle
 
         public List<string> GetSuggestions(string word)
         {
-            string json = ApiController.GetWord(word.ToLower()).Result;
-            JsonDocument suggestionsJson = JsonDocument.Parse(json);
-            List<string> suggestions = new List<string>();
-
-            if (suggestionsJson.RootElement.GetArrayLength() > 0 && suggestionsJson.RootElement[0].ValueKind == JsonValueKind.String) 
+            try
             {
-                suggestions = JsonSerializer.Deserialize<List<string>>(json);
-            }
 
-            return suggestions;
+                string json = ApiController.GetWord(word.ToLower()).Result;
+                JsonDocument suggestionsJson = JsonDocument.Parse(json);
+                List<string> suggestions = new List<string>();
+
+                if (suggestionsJson.RootElement.GetArrayLength() > 0 && suggestionsJson.RootElement[0].ValueKind == JsonValueKind.String) 
+                {
+                    suggestions = JsonSerializer.Deserialize<List<string>>(json);
+                }
+
+                return suggestions;
+            }
+            catch
+            {
+                return new List<string> { };
+            }
         }
 
         public string GetTimeString()
@@ -94,65 +136,69 @@ namespace Exam_Dictionardle
             return Stopwatch.Elapsed.ToString(@"mm\:ss");
         }
 
-        public WordInfo GetWordInfo(string word)
+        private WordInfo getWordInfo(string word)
         {
-            string json = ApiController.GetWord(word.ToLower()).Result;
-            JsonDocument wordInfoJson = JsonDocument.Parse(json);
-
-            WordInfo wordInfo = new WordInfo();
-
-            if (wordInfoJson.RootElement.GetArrayLength() > 0 && wordInfoJson.RootElement[0].ValueKind == JsonValueKind.Object)
+            try
             {
-                wordInfo.Word = wordInfoJson.RootElement[0].GetProperty("meta").GetProperty("stems")[0].GetString();
-                if (wordInfoJson.RootElement[0].GetProperty("hwi").TryGetProperty("prs", out JsonElement pronc))
+                string json = ApiController.GetWord(word.ToLower()).Result;
+                JsonDocument wordInfoJson = JsonDocument.Parse(json);
+
+                WordInfo wordInfo = new WordInfo();
+
+                if (wordInfoJson.RootElement.GetArrayLength() > 0 && wordInfoJson.RootElement[0].ValueKind == JsonValueKind.Object)
                 {
-                    wordInfo.Pronunciation = pronc[0].GetProperty("ipa").GetString();
-
-
-
-                    if (pronc[0].TryGetProperty("sound", out JsonElement audio))
+                    wordInfo.Word = wordInfoJson.RootElement[0].GetProperty("meta").GetProperty("stems")[0].GetString();
+                    if (wordInfoJson.RootElement[0].GetProperty("hwi").TryGetProperty("prs", out JsonElement pronc))
                     {
-                        string audioStr = audio.GetProperty("audio").GetString();
-                        string subDirStr = audioStr[0].ToString();
-                        if (!char.IsLetter(audioStr[0]))
+                        wordInfo.Pronunciation = pronc[0].GetProperty("ipa").GetString();
+
+
+
+                        if (pronc[0].TryGetProperty("sound", out JsonElement audio))
                         {
-                            subDirStr = "number";
+                            string audioStr = audio.GetProperty("audio").GetString();
+                            string subDirStr = audioStr[0].ToString();
+                            if (!char.IsLetter(audioStr[0]))
+                            {
+                                subDirStr = "number";
+                            }
+                            else if (audioStr.Substring(0, 3) == "bix")
+                            {
+                                subDirStr = "bix";
+                            }
+                            else if (audioStr.Substring(0, 2) == "gg")
+                            {
+                                subDirStr = "gg";
+                            }
+                            wordInfo.AudioUrl = $@"https://media.merriam-webster.com/audio/prons/en/us/wav/{subDirStr}/{audioStr}.wav";
+
                         }
-                        else if (audioStr.Substring(0, 3) == "bix")
+                        else
                         {
-                            subDirStr = "bix";
+                            wordInfo.AudioUrl = "-";
                         }
-                        else if (audioStr.Substring(0, 2) == "gg")
-                        {
-                            subDirStr = "gg";
-                        }
-                        wordInfo.AudioUrl = $@"https://media.merriam-webster.com/audio/prons/en/us/wav/{subDirStr}/{audioStr}.wav";
 
                     }
                     else
                     {
                         wordInfo.AudioUrl = "-";
+                        wordInfo.Pronunciation = "-";
                     }
+                    wordInfo.Type = wordInfoJson.RootElement[0].GetProperty("fl").GetString();
 
-                }
-                else
-                {
-                    wordInfo.AudioUrl = "-";
-                    wordInfo.Pronunciation = "-";
-                }
-                wordInfo.Type = wordInfoJson.RootElement[0].GetProperty("fl").GetString();
-                
-                wordInfo.Description = wordInfoJson.RootElement[0].GetProperty("shortdef").EnumerateArray().First().GetString();
+                    wordInfo.Description = wordInfoJson.RootElement[0].GetProperty("shortdef").EnumerateArray().First().GetString();
 
-                if (!_repository.GetWords().ToList().Contains(wordInfo))
-                {
-                    _repository.AddWordInfo(wordInfo);
+                    if (!_repository.GetWords().ToList().Contains(wordInfo))
+                    {
+                        _repository.AddWordInfo(wordInfo);
+                    }
                 }
+
+
+                return wordInfo;
             }
-            
+            catch { return new WordInfo(); }
 
-
-            return wordInfo;
         }
 
 
@@ -169,16 +215,25 @@ namespace Exam_Dictionardle
             };
 
             IsPlaying = false;
-            _repository.AddGame(game);
+            Game newGame = game;
+            if (_repository.GetGames().Any(g => g.Player.Login == game.Player.Login))
+            {
+                newGame.Player = _repository.GetGames().First(g => g.Player.Login == game.Player.Login).Player;
+            }
+            _repository.AddGame(newGame);
         }
 
 
-        public List<Game> GetAllGames()
+        public List<Game> GetHighscores()
         {
-            return _repository.GetGame().Include(g => g.Player).Include(g => g.Word).ToList();
+            return _repository.GetGames().Include(g => g.Player).Include(g => g.Word).OrderByDescending(g => g.Score).ToList();
         }
-        
-        
+        public List<Game> GetGamesByThisPlayer()
+        {
+            return _repository.GetGames().Include(g => g.Player).Include(g => g.Word).Where(g => g.Player.Login == PlayerController.CurrentPlayer.Login).OrderByDescending(g => g.Score).ToList();
+        }
+
+
 
 
     }

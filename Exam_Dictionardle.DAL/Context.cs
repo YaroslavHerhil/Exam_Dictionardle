@@ -16,9 +16,16 @@ namespace Exam_Dictionardle.DAL
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            var connectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Dictionardle;Integrated Security=True;Connect Timeout=30;";
 
-                optionsBuilder.UseSqlServer(connectionString);
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(AppContext.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+
+            var configuration = builder.Build();
+
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+            optionsBuilder.UseSqlServer(connectionString);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
